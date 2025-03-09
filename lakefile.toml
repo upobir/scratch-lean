@@ -1,0 +1,15 @@
+name = "scratch-lean"
+version = "0.1.0"
+defaultTargets = ["scratch-lean"]
+
+[[lean_lib]]
+name = "ScratchLean"
+
+[[lean_exe]]
+name = "scratch-lean"
+root = "Main"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.17.0"
