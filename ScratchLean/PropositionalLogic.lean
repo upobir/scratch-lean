@@ -1,10 +1,23 @@
 import Mathlib
 
 #check Prop
+#check True
+#check False
+
+/- implies is just a function -/
+#check True → True
+
 #check And
+#check True ∧ True
+
 #check Or
+#check False ∨ True
+
 #check Iff
+#check False ↔ False
+
 #check Not
+#check ¬ False
 
 -- p implies p
 example (p : Prop) : p → p := by
