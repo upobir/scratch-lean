@@ -17,6 +17,10 @@ import Mathlib
 -- a = a
 example (a : α) : a = a := by rfl
 
+-- p implies a = b, p proves b = a
+example (a b : α) (p : Prop) (hp : p) (h: p → a = b) : b = a := by
+  exact (h hp).symm
+
 -- P(a), a = b proves P(b)
 example (P : α → Prop) (a b : α) (hab : a = b) (hpa : P a) : P b := by
   rw [← hab]
@@ -72,3 +76,55 @@ example (P Q : α → Prop) (h: ∀ x, P x ↔ Q x) (a: α) (h': ∀ x ≠ a, P 
 -- there exists unique x s.t. P(x) proves there exists x s.t. P(x)
 example (P : α → Prop) (h: ∃! x, P x) : ∃ x, P x := by
   exact ExistsUnique.exists h
+
+-- exists unique x s.t. P(x), P(a), P(b) implies a = b
+example (P : α → Prop) (a b : α) (h: ∃! x, P x) (ha : P a) (hb: P b) : a = b := by
+  obtain ⟨x, hpx, hx_uniq⟩ := h
+  have hax : a = x := by exact hx_uniq a ha
+  rw [← hax] at hx_uniq
+  exact (hx_uniq b hb).symm
+
+-- P(x) ↔ x = a, there exists unique x s.t. P(x)
+example (P : α → Prop) (a : α) (h: ∀ x,  P x ↔ x = a) : ∃! x, P x := by
+  have h₁ : P a := by rw [h]
+  have h₂ (x: α) (hx: P x) : x = a := by exact (h x).mp hx
+  use a
+
+/- counterexample of unique existantial quantifier -/
+-- it's not true that there exists unique x s.t. there exists unique y such that P(x, y) implies there exists unique (x, y) s.t. P(x, y)
+example : ¬ ( ∀ α β: Type, ∀ P : α → β → Prop,  (∃! x, ∃! y, P x y) → (∃! z : α × β, P z.1 z.2) ) := by
+  push_neg
+  let P (x y : Nat) : Prop := (x ≠ 1) ∨ (y = 2)
+  use Nat, Nat, P
+  dsimp [P]
+  constructor
+  . use 1; dsimp
+    constructor
+    . use 2; dsimp
+      constructor <;> simp
+    . rintro x hx
+      obtain ⟨y, ⟨ hy₁, hy₂⟩ ⟩ := hx
+      dsimp at hy₂
+      have hy2 := hy₂ 2
+      simp at hy2
+      by_contra hx_ne1
+      have := hy₂ 3
+      simp at this
+      have hy3 := this hx_ne1
+      rw [← hy3] at hy2
+      contradiction
+  . dsimp [ExistsUnique]
+    push_neg
+    rintro ⟨x, y⟩ hxy
+    simp; simp at hxy
+    obtain hx | hy := hxy
+    . use 1, 2
+      simp
+      rintro hx'
+      rw [hx'] at hx
+      contradiction
+    . use 2, 3
+      simp
+      rintro hx'
+      rw [hy]
+      simp
