@@ -144,3 +144,7 @@ example (p q r : Prop) (hp: p → (q ↔ r)) (hnp: ¬ p → (r ↔ q)) : q ↔ r
   by_cases h: p
   . exact hp h
   . exact (hnp h).symm
+
+-- p, not s proves p or q and not and r iff t and s and p implies s
+example (p q r s t : Prop) (hp: p) (hs: ¬ s) : (p ∨ q) ∧ ¬ p ∧ r ↔ t ∧ s ∧ (p → s) := by
+  simp [hp, hs]
