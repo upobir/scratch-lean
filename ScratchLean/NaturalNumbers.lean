@@ -3,14 +3,19 @@ import Mathlib
 #check Nat
 #check ℕ
 #check Nat.succ
-#check Nat.pred
 
+#check Nat.zero
 #check 0
 #eval Nat.succ 0
-#eval Nat.pred 0
+#check 1
 
-#check 2
-#eval Nat.succ 2
+-- casting natural literals to other types:
+#check OfNat
+#check (5: ℕ)
+#check @OfNat.ofNat ℕ 5 _
+
+#check Nat.pred
+#eval Nat.pred 0
 #eval Nat.pred 2
 
 -- successor's predecessor is self
@@ -49,6 +54,12 @@ example : (3 + 2 * 3 - 10 + 5)/4 = 1 := by
 example (a b : ℕ) : (a + b)^2 = a^2 + 2 * a * b + b^2 := by
   ring
 
+-- doing "division" to cancel multiplication
+example (a b : ℕ) (hb: b ≠ 0) (h : a * b + b = 3 * b) : a = 2 := by
+  have : a * b = 2 * b := by linarith
+  exact (Nat.mul_left_inj hb).mp this
+
+
 -- handling division
 example (a b : ℕ) : (a^2 + 3 + 2) / (b + 1) + 1 = (6 + a*a  + b) / (1 + b) := by
   have : 0 < b + 1 := by positivity
@@ -82,6 +93,11 @@ example (x : ℕ) (hx : 0 < x) : (x^2 - 1) / (x + 1) = x - 1 := by
   calc
     (x^2 - 1) / (x + 1) = (x - 1) * (x + 1) / (x + 1) := by rw [h_sq_minus]
     _ = x - 1 := by field_simp
+
+-- non field denominator cancelling
+example (x y : ℕ) (hy: y ≠ 0) : (x + 1) * y / (3 * y) = (x + 1) / 3 := by
+  refine Nat.mul_div_mul_right _ _ ?_
+  positivity
 
 -- properties that follow floor division
 example (x : ℕ) : 2 * (7 * x + 1) / 7 = (14 * x + 5) / 7 := by
