@@ -132,7 +132,7 @@ example (x y :ℕ) : x^2 - y^2 = (x + y) * (x - y) := by
   exact Nat.sq_sub_sq x y
 
 -- power add and multiplication
-example (a b c : ℕ) : a^(2 * b + 3) + (a^c)^b = a^b * a^b * a^3 + a^(b * c) := by
+example (a b c d : ℕ) : a^(2 * b + 3) + (a^c)^b + a^b * d^b = a^b * a^b * a^3 + a^(b * c) + (a * d)^b := by
   ring
 
 -- using the fact that a = 0 or a > 0 with power division
@@ -143,6 +143,10 @@ example (a b : ℕ) : a ^ (b + 2) / a ^ b = a ^ 2 := by
     . congr 1; omega
     . simp
     . assumption
+
+-- zero ness from power
+example (a n : ℕ) (h: a ≠ 0) : a^n ≠ 0 := by simp [h]
+example (a n : ℕ) (h': n ≠ 0) (h: a^n ≠ 0) : a ≠ 0 := by exact ne_zero_pow h' h
 
 -- taking "root"
 example (a : ℕ) (h: a ^ 5 = 32) : a = 2 := by
@@ -226,14 +230,9 @@ example (x y : ℕ) (h: y < x) (h': y ≠ 0) : 100 / x ≤ 100 / y := by
 -- power related ineq chaining
 example (a n : ℕ) (h: a > 3) (h': n > 0) : a ^ n > 3 := by
   calc
-    a^n > 3^n := by
-      refine Nat.pow_lt_pow_left h ?_
-      positivity
+    a^n > 3^n := by gcongr
     _ ≥ 3^1 := by
-      refine Nat.pow_le_pow_right ?_ h'
+      gcongr
       norm_num
+      omega
     _ = 3 := by norm_num
-
--- zero ness from power
-example (a n : ℕ) (h: a ≠ 0) : a^n ≠ 0 := by simp [h]
-example (a n : ℕ) (h': n ≠ 0) (h: a^n ≠ 0) : a ≠ 0 := by exact ne_zero_pow h' h

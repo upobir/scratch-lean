@@ -89,8 +89,27 @@ example (a b : ℤ) (ha: a + 1 ≠ 1) (hb: b ≠ 0): (a * b + b) / b + 1 = a + 2
       field_simp
     _ = _ := by ring
 
--- TODO not field division
--- TODO floor division
+-- cancelling inside int division works for positive terms only
+example (a : ℤ) (ha: a > 1) : (a^2 - 1) / (3 * (a-1)) = (a + 1) / 3 := by
+  have : a - 1 > 0 := by linarith
+  calc
+    (a^2 - 1) / (3 * (a-1)) = (a+1) * (a-1) / (3 * (a-1)) := by ring_nf
+    _ = (a+1) / 3 := by
+      exact Int.mul_ediv_mul_of_pos_left (a + 1) 3 this
+
+-- cancelling doesnt work for negative terms
+#eval (10 * -2) / (7 * -2) = 10 / 7
+
+-- using the fact that it's floor division, but note that it's euclidean division
+example (x : ℤ)  : (7 * x - 1) / 7 = (-6 + 7*x) / 7 := by calc
+  (7 * x - 1)/7 = (7 * x + -1) / 7 := by ring_nf
+  _ = (7 * x) / 7 + -1 / 7 := by
+    refine Int.add_ediv_of_dvd_left ?_
+    omega
+  _ = -6 / 7 + (7 * x) / 7 := by norm_num; ring
+  _ = (-6 + 7 * x) / 7 := by
+    refine (Int.add_ediv_of_dvd_right ?_).symm
+    omega
 
 -- converting nat subtraction to int subtraction
 example (a b c d e f g h : ℕ) : a + b + c + d + e + f - b + g / h = a + c + d + e + f + g / h := by
@@ -98,6 +117,27 @@ example (a b c d e f g h : ℕ) : a + b + c + d + e + f - b + g / h = a + c + d 
   zify [this]
   ring
 
+-- power add and multiplications, nothing new from naturals
+example (a d : ℤ) (b c : ℕ) : a^(2 * b + 3) + (a^c)^b + (a * d)^b = a^b * a^b * a^3 + a^(b * c) + a^b * d^b := by
+  ring
+
+-- power division, apparently no such theorem
+example (a : ℤ) (ha : a ≠ 0) : a^(2 * x + 1) = a^(3 * x + 1) / a^x := by
+  calc
+    a^(2*x + 1) = a^(3*x + 1 - x) := by congr; omega
+    _ = a^(3 * x + 1) / a^x := by
+      generalize hu: 3 * x + 1 = u
+      refine (Int.ediv_eq_of_eq_mul_left ?_ ?_).symm
+      positivity
+      calc
+        a^u = a^((u-x) + x) := by congr; omega
+        _ = _ := by ring
+
+-- zeroness of powers
+example (a : ℤ) (h: a ≠ 0) : a^n ≠ 0 := by simp [h]
+example (a : ℤ) (h: a^n ≠ 0) (h': n ≠ 0) : a ≠ 0  := by exact ne_zero_pow h' h
+
 -- TODO power
+
 
 -- TODO inequality
