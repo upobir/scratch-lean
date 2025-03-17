@@ -33,6 +33,11 @@ example (a b : ℕ) : a + b = b + a ↔ (a:ℤ) + b = b + a := by
     zify        -- lifting type to int from nat
     assumption
 
+-- taking away int-ness from a expression of just nats
+example (a b : ℕ) (h: a - (3:ℤ) = b - 3) : a = b := by
+  have : (a:ℤ) = b := by linarith
+  norm_cast at this
+
 #check Int.neg
 #eval -(-5)
 
@@ -137,7 +142,67 @@ example (a : ℤ) (ha : a ≠ 0) : a^(2 * x + 1) = a^(3 * x + 1) / a^x := by
 example (a : ℤ) (h: a ≠ 0) : a^n ≠ 0 := by simp [h]
 example (a : ℤ) (h: a^n ≠ 0) (h': n ≠ 0) : a ≠ 0  := by exact ne_zero_pow h' h
 
--- TODO power
+-- taking "root"
+example (a b : ℤ) (n : ℕ) (hn: n > 0) (h : a^n = b^n) : a = b ∨ a = -b := by
+  have hor : n = 0 ∨ a = b ∨ (a = -b ∧ Even n ) :=  pow_eq_pow_iff_cases.mp h
+  have hor := Or.resolve_left hor (by linarith: n ≠ 0)
+  obtain h' | h' := hor
+  all_goals simp [h']
+
+-- square rooting is simpler
+example (a : ℤ) (ha : a < 0) (h: a^2 = 64) : a = -8 := by
+  convert_to a^2 = 8^2 at h
+  have : a = 8 ∨ a = -8 := by exact sq_eq_sq_iff_eq_or_eq_neg.mp h
+  obtain rfl | rfl := this
+  all_goals linarith
+
+-- taking "log" for positive base
+example (a : ℤ) (n m : ℕ) (ha: a > 0) (ha': a ≠ 1) (h: a^n = a^m) : n = m := by
+  exact (pow_right_inj₀ ha ha').mp h
+
+-- taking "log" using the fact that a is not 1, -1 or 0
+example (a : ℤ) (n m : ℕ) (ha'': a ≠ 0) (ha: a ≠ 1) (ha': a ≠ -1) (h: a^n = a^m) : n = m := by
+  have : 1 < a.natAbs := by omega
+  exact Int.pow_right_injective this h
+
+-- trichotomy law for ints
+example (x : ℤ) (h: x^2 ≠ 0) : 0 < x ∨ x < 0 := by
+  obtain h' | h' | h' := Int.lt_trichotomy x 0
+  . right; assumption
+  . have : x^2 = 0 := by exact sq_eq_zero_iff.mpr h'
+    contradiction
+  . left; assumption
 
 
--- TODO inequality
+#check Int.NonNeg
+#check Int.NonNeg (2:ℤ)
+#check Int.NonNeg (-2)
+
+#check Int.le
+#eval -2 ≤ 1
+
+#check Int.lt
+#eval -2 < -1
+
+-- inequalities working with linear arithmetic easily handled
+example (x y : ℤ) (h₁ : 2*x + y ≤ -5) (h₂ : x - y ≤ y) : 3*x - y ≤ -5 := by
+  linarith
+
+-- some facts (like 0 < x → 1 ≤ x and y/2 ≤ 3 → y ≤ 7) require omega
+example (x y : ℤ) (h₁ : 0 < x) (h₂: y / 2 ≤ 3) : (y ≤ x + 6) := by
+  omega
+
+-- even powers are nonnegative and positive multiplication in inequality
+example (x y : ℤ) (h₁ : x + 2 < y + 1) : (x+1) * (x^8+1) < y * (x^8+1) := by
+  have : 0 < x^8 + 1 := by positivity
+  gcongr
+  linarith
+
+-- negative multiplication in inequality and odd powers retatining negativity
+example (x y z : ℤ) (hz : z < 0) (h: x + y < z) : z^6 < z^5 * (x + y) := by
+  calc
+    z^6 = z^5 * z := by rfl
+    _ < z^5 * (x + y) := by
+      refine Int.mul_lt_mul_of_neg_left h ?_
+      refine Odd.pow_neg ?_ hz
+      dsimp [Odd]; use 2; norm_num

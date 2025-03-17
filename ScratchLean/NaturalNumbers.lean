@@ -161,8 +161,6 @@ example (a b c: ℕ) (h' : a > 10) (h : a^b = a^2 * a^c) : b = c + 2 := by
   refine (Nat.pow_right_inj ?_).mp h
   linarith
 
-#check Nat.pow_left_inj
-
 #check Nat.le
 #eval 1 ≤ 1
 #eval 2 ≥ 1

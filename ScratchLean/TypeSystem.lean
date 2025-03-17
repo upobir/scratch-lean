@@ -241,5 +241,73 @@ inductive VectorND (α : Type) : Nat → Type
 #check (VectorND.nil : VectorND Nat 0)
 #check VectorND.mk 10 (VectorND.mk 20 VectorND.nil) -- (10, 20)
 
-
 end
+
+
+-- typeclass are really just types
+-- they can be bunch of facts together (basically structure)
+class TrueIsProvable where
+  proofOfTrue : True
+
+#check TrueIsProvable
+#check TrueIsProvable.proofOfTrue
+#check TrueIsProvable.mk
+
+def funUsingTrueIsProvable [TrueIsProvable] : True := TrueIsProvable.proofOfTrue
+
+-- can provide instances for type classes, which will be inferred
+instance instTrueIsProvable: TrueIsProvable where
+  proofOfTrue := True.intro
+
+#check instTrueIsProvable
+#check instTrueIsProvable.proofOfTrue
+
+#synth TrueIsProvable
+#check funUsingTrueIsProvable = True.intro
+
+
+-- typeclass is useful when it holds elements of some type, then it becaomes a type (not a proposition)
+class SomePropIsProvable where
+  p : Prop
+  hp : p
+
+#check SomePropIsProvable
+#check SomePropIsProvable.mk
+#check SomePropIsProvable.p
+#check SomePropIsProvable.hp
+
+
+-- note that inferred instance's p and hp are being used
+def funUsingPropIsProvable [SomePropIsProvable] (x : Nat) : ∃ (p : Prop), p :=
+  Exists.intro SomePropIsProvable.p SomePropIsProvable.hp
+
+instance : SomePropIsProvable where
+  p := True
+  hp := True.intro
+
+-- auto named
+#synth SomePropIsProvable
+
+#check funUsingPropIsProvable 3
+#check @funUsingPropIsProvable inferInstance 3
+#check @funUsingPropIsProvable inferInstance 3
+
+-- note can define many instances, last one becomes default
+instance otherInstPropIsProvable: SomePropIsProvable where
+  p := False → False
+  hp := fun h => h
+
+#synth SomePropIsProvable
+
+-- classes should utlize indices to be really useful
+class BetterSomePropIsProvable (p : Prop) where
+  hp : p
+
+instance : BetterSomePropIsProvable True where
+  hp := True.intro
+
+instance : BetterSomePropIsProvable (False → False) where
+  hp := fun h => h
+
+#check BetterSomePropIsProvable
+#check BetterSomePropIsProvable.hp
